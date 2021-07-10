@@ -6,7 +6,7 @@ input from StdIn, independent of:
 - OS
 - If it is interactive keyboard input or a redirected file input
 
-Especially under MS-Windows the is a difference between those. But usually we 
+Especially under MS-Windows there is a difference between those. But usually we 
 are only interested in the input data and not in where they come from.
 
 ## Build
