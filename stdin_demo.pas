@@ -36,6 +36,7 @@
         jrgdre: J.Drechsler, Medical Data Solutions GmbH
 
     @version
+        1.1.0 2021-07-12 jrgdre, add linux support
         1.0.0 2021-07-08 jrgdre, initial release (win64 working)
 }
 program stdin_demo;
