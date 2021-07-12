@@ -1,1 +1,3 @@
-*.exe
+*
+!ReadMe.md
+!linux64!win64/

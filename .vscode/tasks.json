@@ -37,6 +37,7 @@
 		"linux":{
 			"command": "fpc",
 			"args": [
+				"-v",
 				"-gw3",
 				"-godwarfsets",
 				"-O-",
