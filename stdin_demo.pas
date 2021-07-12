@@ -39,10 +39,12 @@
         1.0.0 2021-07-08 jrgdre, initial release (win64 working)
 }
 program stdin_demo;
+{$ifdef WINDOWS}{$APPTYPE CONSOLE}{$endif}
 {$mode Delphi}
 
 uses
-    StdIn,
+    {$ifdef WINDOWS}StdIn in 'src_win/StdIn.pas',{$endif}
+    {$ifdef LINUX  }StdIn in 'src_linux/StdIn.pas',{$endif}
     classes;
 
 var

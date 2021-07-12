@@ -1,5 +1,9 @@
 {!  Unified reading from StdIn for different OS.
 
+    Tested on:
+    - Windows 7
+    - Ubuntu 18.04
+
     @copyright
         (c)2021 Medical Data Solutions GmbH, www.medaso.de
 
@@ -20,7 +24,7 @@
         jrgdre: J.Drechsler, Medical Data Solutions GmbH
 
     @version
-        1.0.0 2021-07-08 jrgdre, initial release (win64 working)
+        1.0.0 2021-07-12 jrgdre, initial release 
 }
 unit StdIn;
 {$mode Delphi}
@@ -29,9 +33,6 @@ interface
 
 uses
     classes;
-
-const
-    TIME_OUT_RESOLUTION_MS = 50;
 
 type
     {!  Return values of the Read() function
@@ -46,6 +47,19 @@ type
         sireReadError    , // an error during input reading occurred
         sireWriteError     // an error during ms writing occurred
     );
+
+var
+    { Some parameters to tweek the ReadInteractive() behaviour.
+    }
+    TimeOutResolutionMS: QWord   = 50;   //< sleep duration between input checks
+    ShowHint           : Boolean = True; //< show hints for interactive input
+    Hint1: String = 'Start typing within %dms.';
+    {$ifdef Linux}
+        Hint2: String = 'Press CTRL+D when finished.';
+    {$endif}
+    {$ifdef Windows}
+        Hint2: String = 'Press CTRL+Z when finished.';
+    {$endif}
 
 {!  Append `memory` with the values read from StdIn.
 
@@ -77,121 +91,25 @@ function Read(
 implementation
 
 uses
-    windows,
-    sysutils;
+    {$ifdef Linux}
+        StdIn_Linux
+    {$endif}
+    {$ifdef Windows}
+        StdIn_Windows
+    {$endif}
+;
 
-{!  Read from a redirected input stream.
-}
-function ReadFile(
-      var ms: TMemoryStream;
-    const h : THandle
-): TStdInReadError;
-var
-    b : Byte;
-    hs: THandleStream;
-begin
-    hs := THandleStream.Create(h);
-    if (not Assigned(hs)) then begin
-        Result := sireInvalidHandle;
-        Exit;
-    end;
-    try
-        if (hs.Size > 0) then begin
-            hs.Position := 0;
-            while (hs.Position < hs.Size) do begin
-                try
-                    b := hs.ReadByte;
-                except
-                    on E: Exception do begin
-                        Result := sireReadError;
-                        Exit;
-                    end;
-                end;
-                try
-                    ms.WriteByte(b);
-                except
-                    on E: Exception do begin
-                        Result := sireWriteError;
-                        Exit;
-                    end;
-                end;
-            end;
-        end;
-    finally
-        hs.Free;
-    end;
-    Result := sireNoError;
-end;
-
-{!  Read interactive keyboard input.
-}
-function ReadInteractive(
-      var ms     : TMemoryStream;
-    const h      : THandle;
-    const timeOut: NativeUInt
-): TStdInReadError;
-var
-    c  : Char;
-    cnt: Cardinal;
-    ir : TInputRecord;
-    ts : QWord;
-begin
-    cnt := 0;
-    ts  := GetTickCount64;
-    repeat
-        PeekConsoleInput(h, ir, 1, cnt); // nonblocking on windows,
-                                         // non-redirected stdIn only
-        if (cnt = 0) then begin
-            Sleep(TIME_OUT_RESOLUTION_MS);
-            if ((GetTickCount64 - ts) >= timeOut) then begin
-                Result := sireTimeOut;
-                Exit;
-            end;
-        end;
-    until (cnt > 0);
-    while (not EOF) do begin
-        c := #0;
-        System.Read(c);
-        if (ms.Write(c, 1) = 0) then begin
-            Result := sireWriteError;
-            Exit;
-        end;
-    end;
-    Result := sireNoError;
-end;
-
-{
-}
 function Read(
       var ms     : TMemoryStream;
     const timeOut: NativeUInt = 0
-): TStdInReadError;
-var
-    h: THandle;
+): TStdInReadError; overload;
 begin
-    h  := GetStdHandle(STD_INPUT_HANDLE);
-    if (h = 0) then begin
-        Result := sireNullHandle;
-        Exit;
-    end;
-    if (h = INVALID_HANDLE_VALUE) then begin
-        Result := sireInvalidHandle;
-        Exit;
-    end;
-
-    case GetFileType(h) of
-
-        FILE_TYPE_DISK, // case `prg < file`
-        FILE_TYPE_PIPE: // case `type file | prg`
-            Result := ReadFile(ms, h);
-
-        FILE_TYPE_CHAR: // case `prg`
-            Result := ReadInteractive(ms, h, timeOut);
-
-        else // unknown file type
-            Result := sireSourceErr;
-
-    end;
+    {$ifdef Linux}
+        Result := Linux_read_StdIn(ms, timeOut);
+    {$endif}
+    {$ifdef Windows}
+        Result := Windows_Read_StdIn(ms, timeOut);
+    {$endif}
 end;
 
 end.
