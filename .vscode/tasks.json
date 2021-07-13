@@ -11,12 +11,17 @@
 				"owner": "fpc",
 				"pattern":[
 					{
+						"regexp": "^(Compiling)(\\s)(.*)",
+						"file": 3,
+					},
+					{
 						"regexp": "^([a-zA-Z_-]+\\.[a-zA-Z_-]+)(\\()(\\d+)(\\,)(\\d+)(\\) )([a-zA-Z]+)(: )(.*)",
-						"file": 1,
+						//"file": 1,
 						"line": 3,
 						"column": 5,
 						"severity": 7,
-						"message": 9
+						"message": 9,
+						"loop": true
 					}
 				]
 			}
