@@ -44,9 +44,13 @@ program stdin_demo;
 {$mode Delphi}
 
 uses
-	StdIn,
-	{$ifdef WINDOWS}StdIn in 'src_win/StdIn.pas',{$endif}
-	{$ifdef LINUX  }StdIn in 'src_linux/StdIn.pas',{$endif}
+	StdIn in 'StdIn.pas',
+	{$ifdef Linux  }
+		StdIn_Linux in 'StdIn_Linux.pas',
+	{$endif}
+	{$ifdef Windows}
+		StdIn_Windows in 'StdIn_Windows.pas',
+	{$endif}
 	classes;
 
 var
